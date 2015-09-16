@@ -20,9 +20,22 @@ class LoginView {
 	 * @return  void BUT writes to standard output and cookies!
 	 */
 	public function response() {
-		$message = '';
+		$message = "";
+
+		$user = $this->getRequestUserName();
+		$pass = $this->getRequestPassword();
+
+		if(isset($_POST[self::$login])){
+			if($user == ""){
+				$message = "Username is missing";
+			}
+			else if($pass == ""){
+				$message = "Password is missing";
+			}
+		}
+
 		
-		$response = $this->generateLoginFormHTML($message);
+		$response = $this->generateLoginFormHTML($message, $user);
 		//$response .= $this->generateLogoutButtonHTML($message);
 		return $response;
 	}
@@ -46,7 +59,7 @@ class LoginView {
 	* @param $message, String output message
 	* @return  void, BUT writes to standard output!
 	*/
-	private function generateLoginFormHTML($message) {
+	private function generateLoginFormHTML($message, $user) {
 		return '
 			<form method="post" > 
 				<fieldset>
@@ -54,7 +67,7 @@ class LoginView {
 					<p id="' . self::$messageId . '">' . $message . '</p>
 					
 					<label for="' . self::$name . '">Username :</label>
-					<input type="text" id="' . self::$name . '" name="' . self::$name . '" value="" />
+					<input type="text" id="' . self::$name . '" name="' . self::$name . '" value="' . $user . '" />
 
 					<label for="' . self::$password . '">Password :</label>
 					<input type="password" id="' . self::$password . '" name="' . self::$password . '" />
@@ -67,10 +80,16 @@ class LoginView {
 			</form>
 		';
 	}
-	
-	//CREATE GET-FUNCTIONS TO FETCH REQUEST VARIABLES
+
+	//Get user name
 	private function getRequestUserName() {
-		//RETURN REQUEST VARIABLE: USERNAME
+		if(isset($_POST[self::$name]))
+			return $_POST[self::$name];
+	}
+	//Get Password
+	private function getRequestPassword() {
+		if(isset($_POST[self::$password]))
+			return $_POST[self::$password];
 	}
 	
 }

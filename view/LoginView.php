@@ -9,7 +9,11 @@ class LoginView {
 	private static $cookiePassword = 'LoginView::CookiePassword';
 	private static $keep = 'LoginView::KeepMeLoggedIn';
 	private static $messageId = 'LoginView::Message';
+	public $databaseModel;
 
+	public function __construct(DatabaseModel $model){
+		$this->databaseModel = $model;
+	}
 	
 
 	/**
@@ -20,23 +24,39 @@ class LoginView {
 	 * @return  void BUT writes to standard output and cookies!
 	 */
 	public function response() {
-		$message = "";
-
-		$user = $this->getRequestUserName();
-		$pass = $this->getRequestPassword();
-
-		if(isset($_POST[self::$login])){
+		$response = "";
+		if($_SESSION['Login'] == true){
+			if($this->userWantsToLogout()){
+				$_SESSION["Login"] = false;
+				$response = $this->generateLoginFormHTML("", "");
+			}
+			else{
+				$message = "";
+				$response = $this->generateLogoutButtonHTML($message);
+			}
+		}
+		else{
+			$user = $this->getRequestUserName();
+			$pass = $this->getRequestPassword();
 			if($user == ""){
 				$message = "Username is missing";
+				$response = $this->generateLoginFormHTML($message, $user);
 			}
 			else if($pass == ""){
 				$message = "Password is missing";
+				$response = $this->generateLoginFormHTML($message, $user);
+			}
+			else if(!$this->databaseModel->verify($user,$pass)){
+				$message = "Wrong name or password";
+				$response = $this->generateLoginFormHTML($message, $user);
+			}
+			else{
+				$message = "";
+				$_SESSION["Login"] = true;
+				$response = $this->generateLogoutButtonHTML($message);
 			}
 		}
 
-		
-		$response = $this->generateLoginFormHTML($message, $user);
-		//$response .= $this->generateLogoutButtonHTML($message);
 		return $response;
 	}
 
@@ -91,5 +111,17 @@ class LoginView {
 		if(isset($_POST[self::$password]))
 			return $_POST[self::$password];
 	}
-	
+
+	private function userWantsToLogin() {
+		if(isset($_POST[self::$login]))
+			return true;
+		else
+			return false;
+	}
+	private function userWantsToLogout() {
+		if(isset($_POST[self::$logout]))
+			return true;
+		else
+			return false;
+	}
 }

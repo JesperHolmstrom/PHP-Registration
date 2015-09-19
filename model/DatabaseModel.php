@@ -12,11 +12,9 @@ class DatabaseModel{
 
     public function verify($username, $password){
         if($username == self::$correctUser && $password == self::$correctPass){
-            $this->isLoggedIn = true;
             return true;
         }
         else{
-            $this->isLoggedIn = false;
             return false;
         }
     }

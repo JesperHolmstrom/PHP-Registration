@@ -25,17 +25,31 @@ class LoginView {
 	 */
 	public function response() {
 		$response = "";
+		//var_dump($_SESSION["Login"]);
 		if($_SESSION['Login'] == true){
 			if($this->userWantsToLogout()){
 				$_SESSION["Login"] = false;
-				$response = $this->generateLoginFormHTML("", "");
+				$response = $this->generateLoginFormHTML("Bye bye!", "");
+				session_destroy();
 			}
 			else{
 				$message = "";
 				$response = $this->generateLogoutButtonHTML($message);
 			}
 		}
-		else{
+		else if(!$this->userWantsToLogin() && !$this->userWantsToLogout()){
+			$message = "";
+			$response = $this->generateLoginFormHTML($message, "");
+		}
+		else if($this->userWantsToLogout()){
+			if($_SESSION["Login"] == true)
+				$message = "Bye bye!";
+			else
+				$message = "";
+			$response = $this->generateLoginFormHTML($message, "");
+		}
+		else
+		{
 			$user = $this->getRequestUserName();
 			$pass = $this->getRequestPassword();
 			if($user == ""){
@@ -51,9 +65,10 @@ class LoginView {
 				$response = $this->generateLoginFormHTML($message, $user);
 			}
 			else{
-				$message = "";
+				$message = "Welcome";
 				$_SESSION["Login"] = true;
 				$response = $this->generateLogoutButtonHTML($message);
+
 			}
 		}
 
@@ -111,17 +126,23 @@ class LoginView {
 		if(isset($_POST[self::$password]))
 			return $_POST[self::$password];
 	}
-
+	//Is $_POST["Login"] Set?
 	private function userWantsToLogin() {
 		if(isset($_POST[self::$login]))
 			return true;
 		else
 			return false;
 	}
+	//Is $_POST["Logout"] Set?
 	private function userWantsToLogout() {
 		if(isset($_POST[self::$logout]))
 			return true;
 		else
 			return false;
+	}
+
+	//Is Keep me login checked?
+	private function keepLogin(){
+		return isset($_POST[self::$keep]);
 	}
 }

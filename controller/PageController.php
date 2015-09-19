@@ -29,11 +29,13 @@ class PageController{
 
 
     public function start(){
-        if(isset($_SESSION['Login'])){
-            $this->lv->render($_SESSION['Login'], $this->v, $this->dtv);
-        }
-        else{
-            $this->lv->render(false, $this->v, $this->dtv);
+        $this->initiateSession();
+        $this->lv->render($_SESSION['Login'], $this->v, $this->dtv);
+    }
+
+    public function initiateSession(){
+        if(!isset($_SESSION['Login'])){
+            $_SESSION['Login'] = false;
         }
     }
 }

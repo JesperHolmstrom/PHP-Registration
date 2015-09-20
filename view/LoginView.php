@@ -25,12 +25,20 @@ class LoginView {
 	 */
 	public function response() {
 		$response = "";
-		//var_dump($_SESSION["Login"]);
+
 		if($_SESSION['Login'] == true){
 			if($this->userWantsToLogout()){
 				$_SESSION["Login"] = false;
 				$response = $this->generateLoginFormHTML("Bye bye!", "");
 				session_destroy();
+				if (isset($_COOKIE[self::$cookieName])) {
+					unset($_COOKIE[self::$cookieName]);
+					setcookie(self::$cookieName, '', time() - 3600, '/'); // empty value and old timestamp
+				}
+				if (isset($_COOKIE[self::$cookiePassword])) {
+					unset($_COOKIE[self::$cookiePassword]);
+					setcookie(self::$cookiePassword, '', time() - 3600, '/'); // empty value and old timestamp
+				}
 			}
 			else{
 				$message = "";
@@ -67,8 +75,24 @@ class LoginView {
 			else{
 				$message = "Welcome";
 				$_SESSION["Login"] = true;
+				// Set a cookie that expires in 24 hours
+				if($this->keepLogin()){
+					setcookie(self::$cookieName,$user, time()+3600*24);
+					setcookie(self::$cookiePassword,$pass, time()+3600*24);
+				}
 				$response = $this->generateLogoutButtonHTML($message);
 
+			}
+		}
+		if($this->isThereAnyCookies() && $_SESSION["Login"] == false){
+			if($this->databaseModel->verify($_COOKIE[self::$cookieName], $_COOKIE[self::$cookiePassword])){
+				$message = "Welcome back with cookie";
+				$_SESSION["Login"] = true;
+				$response = $this->generateLogoutButtonHTML($message);
+			}
+			else{
+				$message = "Wrong information in cookies";
+				$response = $this->generateLogoutButtonHTML($message);
 			}
 		}
 
@@ -140,9 +164,13 @@ class LoginView {
 		else
 			return false;
 	}
-
 	//Is Keep me login checked?
 	private function keepLogin(){
 		return isset($_POST[self::$keep]);
+	}
+
+	//Is there any cookies available?
+	private function isThereAnyCookies(){
+		return isset($_COOKIE[self::$cookieName]) && isset($_COOKIE[self::$cookiePassword]);
 	}
 }

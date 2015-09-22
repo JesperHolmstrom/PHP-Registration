@@ -30,9 +30,10 @@ class PageController{
 
     public function start(){
         $this->initiateSession();
-        $this->lv->render($_SESSION['Login'], $this->v, $this->dtv);
+        $this->lv->render($this->v, $this->dtv);
     }
 
+    /* Start a session if there isn't one allready */
     public function initiateSession(){
         if(!isset($_SESSION['Login'])){
             $_SESSION['Login'] = false;

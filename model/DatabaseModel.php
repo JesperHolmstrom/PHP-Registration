@@ -10,12 +10,8 @@ class DatabaseModel{
     private static $correctUser = "Admin";
     private static $correctPass = "Password";
 
+    /* Check if the username and password is correct */
     public function verify($username, $password){
-        if($username == self::$correctUser && $password == self::$correctPass){
-            return true;
-        }
-        else{
-            return false;
-        }
+        return $username == self::$correctUser && $password == self::$correctPass;
     }
 }

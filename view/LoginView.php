@@ -26,11 +26,13 @@ class LoginView {
 	public function response() {
 		$response = "";
 
-		if($_SESSION['Login'] == true){
+		if($_SESSION['Login'] == true){ //User is already logged in
 			if($this->userWantsToLogout()){
 				$_SESSION["Login"] = false;
 				$response = $this->generateLoginFormHTML("Bye bye!", "");
 				session_destroy();
+
+				//Destroy cookies if there are any
 				if (isset($_COOKIE[self::$cookieName])) {
 					unset($_COOKIE[self::$cookieName]);
 					setcookie(self::$cookieName, '', time() - 3600, '/'); // empty value and old timestamp
@@ -40,17 +42,17 @@ class LoginView {
 					setcookie(self::$cookiePassword, '', time() - 3600, '/'); // empty value and old timestamp
 				}
 			}
-			else{
+			else{ //Remove message on reload
 				$message = "";
 				$response = $this->generateLogoutButtonHTML($message);
 			}
 		}
-		else if(!$this->userWantsToLogin() && !$this->userWantsToLogout()){
+		else if(!$this->userWantsToLogin() && !$this->userWantsToLogout()){ //Remove message on reload
 			$message = "";
 			$response = $this->generateLoginFormHTML($message, "");
 		}
 		else if($this->userWantsToLogout()){
-			if($_SESSION["Login"] == true)
+			if($_SESSION["Login"] == true) //Show bye bye message when user wants to log out
 				$message = "Bye bye!";
 			else
 				$message = "";
@@ -72,10 +74,10 @@ class LoginView {
 				$message = "Wrong name or password";
 				$response = $this->generateLoginFormHTML($message, $user);
 			}
-			else{
+			else{ //successfull login
 				$message = "Welcome";
 				$_SESSION["Login"] = true;
-				// Set a cookie that expires in 24 hours
+				// Set a cookie that expires in 24 hours if 'keep' checkbox is checked
 				if($this->keepLogin()){
 					setcookie(self::$cookieName,$user, time()+3600*24);
 					setcookie(self::$cookiePassword,$pass, time()+3600*24);
@@ -84,7 +86,7 @@ class LoginView {
 
 			}
 		}
-		if($this->isThereAnyCookies() && $_SESSION["Login"] == false){
+		if($this->isThereAnyCookies() && $_SESSION["Login"] == false){ //Login with cookies
 			if($this->databaseModel->verify($_COOKIE[self::$cookieName], $_COOKIE[self::$cookiePassword])){
 				$message = "Welcome back with cookie";
 				$_SESSION["Login"] = true;

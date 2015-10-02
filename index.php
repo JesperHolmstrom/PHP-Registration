@@ -7,6 +7,7 @@ require_once("Settings.php");
 require_once("controller/LoginController.php");
 require_once("view/DateTimeView.php");
 require_once("view/LayoutView.php");
+require_once("view/RegisterView.php");
 
 if (Settings::DISPLAY_ERRORS) {
 	error_reporting(-1);
@@ -20,6 +21,7 @@ session_start();
 $m = new LoginModel();
 $v = new LoginView($m);
 $c = new LoginController($m, $v);
+$rv = new RegisterView();
 
 
 //Controller must be run first since state is changed
@@ -29,5 +31,5 @@ $c->doControl();
 //Generate output
 $dtv = new DateTimeView();
 $lv = new LayoutView();
-$lv->render($m->isLoggedIn($v->getUserClient()), $v, $dtv);
+$lv->render($m->isLoggedIn($v->getUserClient()), $v, $dtv, $rv);
 

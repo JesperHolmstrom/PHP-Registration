@@ -4,7 +4,7 @@
   * @author Daniel Toll
   */
 class LayoutView {
-  public function render($isLoggedIn, LoginView $v, DateTimeView $dtv) {
+  public function render($isLoggedIn, LoginView $v, DateTimeView $dtv, RegisterView $rv) {
 ?>
 <!DOCTYPE html>
 <html>
@@ -14,8 +14,12 @@ class LayoutView {
   </head>
   <body>
     <h1>Assignment 2</h1>
-    <a href='?register'>Register a new user</a>
-    <?php 
+    <?php
+      if($rv->userClickedOnRegister())
+        echo $rv->getBackLink();
+      else
+        echo $rv->getRegistrationLink();
+
       if ($isLoggedIn) {
         echo "<h2>Logged in</h2>";
       } else {
@@ -23,8 +27,12 @@ class LayoutView {
     }
   ?>
     <div class="container" >
-      <?php 
-        echo $v->response();
+      <?php
+
+        if($rv->userClickedOnRegister())
+          echo $rv->response();
+        else
+          echo $v->response();
 
         $dtv->show();
       ?>

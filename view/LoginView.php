@@ -1,178 +1,282 @@
 <?php
+/**
+  * Solution for assignment 2
+  * @author Daniel Toll
+  */
+namespace view;
 
 class LoginView {
-	private static $login = 'LoginView::Login';
-	private static $logout = 'LoginView::Logout';
-	private static $name = 'LoginView::UserName';
-	private static $password = 'LoginView::Password';
-	private static $cookieName = 'LoginView::CookieName';
-	private static $cookiePassword = 'LoginView::CookiePassword';
-	private static $keep = 'LoginView::KeepMeLoggedIn';
-	private static $messageId = 'LoginView::Message';
-	public $databaseModel;
+	/**
+	 * These names are used in $_POST
+	 * @var string
+	 */
+	private static $login = "LoginView::Login";
+	private static $logout = "LoginView::Logout";
+	private static $name = "LoginView::UserName";
+	private static $password = "LoginView::Password";
+	private static $cookieName = "LoginView::CookieName";
+	private static $CookiePassword = "LoginView::CookiePassword";
+	private static $keep = "LoginView::KeepMeLoggedIn";
+	private static $messageId = "LoginView::Message";
 
-	public function __construct(DatabaseModel $model){
-		$this->databaseModel = $model;
+	/**
+	 * This name is used in session
+	 * @var string
+	 */
+	private static $sessionSaveLocation = "\\view\\LoginView\\message";
+
+	/**
+	 * view state set by controller through setters
+	 * @var boolean
+	 */
+	private $loginHasFailed = false;
+	private $loginHasSucceeded = false;
+	private $userDidLogout = false;
+
+	/**
+	 * @var \model\LoginModel
+	 */
+	private $model;
+
+	/**
+	 * @param \model\LoginModel $model
+	 */
+	public function __construct(\model\LoginModel $model) {
+		self::$sessionSaveLocation .= \Settings::APP_SESSION_NAME;
+		$this->model = $model;
 	}
-	
+
+	/**
+	 * accessor method for login attempts
+	 * both by cookie and by form
+	 * 
+	 * @return boolean true if user did try to login
+	 */
+	public function userWantsToLogin() {
+		return isset($_POST[self::$login]) || 
+			   isset($_COOKIE[self::$cookieName]);
+	}
+
+	/**
+	 * Accessor method for logout events
+	 * 
+	 * @return boolean true if user tried to logout
+	 */
+	public function userWantsToLogout() {
+		return isset($_POST[self::$logout]);	
+	}
+
+	/**
+	 * Accessor method for login credentials
+	 * @return \model\UserCredentials
+	 */
+	public function getCredentials() {
+		return new \model\UserCredentials($this->getUserName(), 
+									$this->getPassword(),
+									$this->getTempPassword(),
+									$this->getUserClient());
+	}
+
+	public function getUserClient() {
+		return new \model\UserClient($_SERVER["REMOTE_ADDR"], $_SERVER["HTTP_USER_AGENT"]);
+	}
+
+	/**
+	 * Tell the view that login has failed so that it can show correct message
+	 *
+	 * call this when login has failed
+	 */
+	public function setLoginFailed() {
+		$this->loginHasFailed = true;
+	}
+
+	/**
+	 * Tell the view that login succeeded so that it can show correct message
+	 *
+	 * call this if login succeeds
+	 */
+	public function setLoginSucceeded() {
+		$this->loginHasSucceeded = true;	
+	}
+
+	/**
+	 * Tell the view that logout happened so that it can show correct message
+	 *
+	 * call this when user logged out
+	 */
+	public function setUserLogout() {
+		$this->userDidLogout = true;	
+	}
 
 	/**
 	 * Create HTTP response
 	 *
 	 * Should be called after a login attempt has been determined
-	 *
-	 * @return  void BUT writes to standard output and cookies!
+	 * @sideeffect Sets cookies!
+	 * @return String HTML
 	 */
 	public function response() {
-		$response = "";
+		if ($this->model->isLoggedIn($this->getUserClient())) {
+			return $this->doLogoutForm();
+		} else {
+			return $this->doLoginForm();
+		}
+	}
 
-		if($_SESSION['Login'] == true){ //User is already logged in
-			if($this->userWantsToLogout()){
-				$_SESSION["Login"] = false;
-				$response = $this->generateLoginFormHTML("Bye bye!", "");
-				session_destroy();
 
-				//Destroy cookies if there are any
-				if (isset($_COOKIE[self::$cookieName])) {
-					unset($_COOKIE[self::$cookieName]);
-					setcookie(self::$cookieName, '', time() - 3600, '/'); // empty value and old timestamp
+	/**
+	 * @sideeffect Sets cookies!
+	 * @return [String HTML
+	 */
+	private function doLogoutForm() {
+		$message = "";
+		//Correct Login Message
+		if ($this->loginHasSucceeded === true) {
+			$message = "Welcome";
+			if ($this->rememberMe()) {
+				if (isset($_COOKIE[self::$CookiePassword])) {
+					$message .= " back with cookie";
+				} else {
+					$message .= " and you will be remembered";
 				}
-				if (isset($_COOKIE[self::$cookiePassword])) {
-					unset($_COOKIE[self::$cookiePassword]);
-					setcookie(self::$cookiePassword, '', time() - 3600, '/'); // empty value and old timestamp
-				}
 			}
-			else{ //Remove message on reload
-				$message = "";
-				$response = $this->generateLogoutButtonHTML($message);
-			}
-		}
-		else if(!$this->userWantsToLogin() && !$this->userWantsToLogout()){ //Remove message on reload
-			$message = "";
-			$response = $this->generateLoginFormHTML($message, "");
-		}
-		else if($this->userWantsToLogout()){
-			if($_SESSION["Login"] == true) //Show bye bye message when user wants to log out
-				$message = "Bye bye!";
-			else
-				$message = "";
-			$response = $this->generateLoginFormHTML($message, "");
-		}
-		else
-		{
-			$user = $this->getRequestUserName();
-			$pass = $this->getRequestPassword();
-			if($user == ""){
-				$message = "Username is missing";
-				$response = $this->generateLoginFormHTML($message, $user);
-			}
-			else if($pass == ""){
-				$message = "Password is missing";
-				$response = $this->generateLoginFormHTML($message, $user);
-			}
-			else if(!$this->databaseModel->verify($user,$pass)){
-				$message = "Wrong name or password";
-				$response = $this->generateLoginFormHTML($message, $user);
-			}
-			else{ //successfull login
-				$message = "Welcome";
-				$_SESSION["Login"] = true;
-				// Set a cookie that expires in 24 hours if 'keep' checkbox is checked
-				if($this->keepLogin()){
-					setcookie(self::$cookieName,$user, time()+3600*24);
-					setcookie(self::$cookiePassword,$pass, time()+3600*24);
-				}
-				$response = $this->generateLogoutButtonHTML($message);
-
-			}
-		}
-		if($this->isThereAnyCookies() && $_SESSION["Login"] == false){ //Login with cookies
-			if($this->databaseModel->verify($_COOKIE[self::$cookieName], $_COOKIE[self::$cookiePassword])){
-				$message = "Welcome back with cookie";
-				$_SESSION["Login"] = true;
-				$response = $this->generateLogoutButtonHTML($message);
-			}
-			else{
-				$message = "Wrong information in cookies";
-				$response = $this->generateLogoutButtonHTML($message);
-			}
+			$this->redirect($message);
+		} else {
+			$message = $this->getSessionMessage();
+			
 		}
 
-		return $response;
+		//Set new cookies
+		if ($this->rememberMe()) {
+			$this->setNewTemporaryPassword(); 
+		} else {
+			$this->unsetCookies();
+		}
+
+		//generate HTML
+		return $this->getLogoutButtonHTML($message);
 	}
 
 	/**
-	* Generate HTML code on the output buffer for the logout button
-	* @param $message, String output message
-	* @return  void, BUT writes to standard output!
-	*/
-	private function generateLogoutButtonHTML($message) {
-		return '
-			<form  method="post" >
-				<p id="' . self::$messageId . '">' . $message .'</p>
-				<input type="submit" name="' . self::$logout . '" value="logout"/>
-			</form>
-		';
+	 * @sideeffect Sets cookies!
+	 * @return [String HTML
+	 */
+	private function doLoginForm() {
+		$message = "";
+		//Correct messages
+		if ($this->userWantsToLogout() && $this->userDidLogout) {
+			$message = "Bye bye!";
+			$this->redirect($message);
+		} else if ($this->userWantsToLogin() && $this->getTempPassword() != "") {
+			$message =  "Wrong information in cookies";
+		} else if ($this->userWantsToLogin() && $this->getRequestUserName() == "") {
+			$message =  "Username is missing";
+		} else if ($this->userWantsToLogin() && $this->getPassword() == "") {
+			$message =  "Password is missing";
+		} else if ($this->loginHasFailed === true) {
+			$message =  "Wrong name or password";
+		} else {
+			$message = $this->getSessionMessage();
+		}
+
+		//cookies
+		$this->unsetCookies();
+		
+		//generate HTML
+		return $this->generateLoginFormHTML($message);
 	}
-	
+
+	private function redirect($message) {
+		$_SESSION[self::$sessionSaveLocation] = $message;
+		$actual_link = 'http://'.$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF'];
+		header("Location: $actual_link");
+	}
+
+	private function getSessionMessage() {
+		if (isset($_SESSION[self::$sessionSaveLocation])) {
+			$message = $_SESSION[self::$sessionSaveLocation];
+			unset($_SESSION[self::$sessionSaveLocation]);
+			return $message;
+		}
+		return "";
+	}
+
 	/**
-	* Generate HTML code on the output buffer for the logout button
-	* @param $message, String output message
-	* @return  void, BUT writes to standard output!
-	*/
-	private function generateLoginFormHTML($message, $user) {
-		return '
-			<form method="post" > 
+	 * unset cookies both locally and on the client
+	 */
+	private function unsetCookies() {
+		setcookie(self::$cookieName, "", time()-1);
+		setcookie(self::$CookiePassword, "", time()-1);
+		unset($_COOKIE[self::$cookieName]);
+		unset($_COOKIE[self::$CookiePassword]);
+	}
+
+	private function setNewTemporaryPassword() {
+
+		//set New Cookie
+		$tempCred = $this->model->getTempCredentials();
+		if ($tempCred) {
+			setcookie(self::$cookieName, $this->getUserName(), $tempCred->getExpire());
+			setcookie(self::$CookiePassword, $tempCred->getPassword(), $tempCred->getExpire());
+		}
+	}
+
+	private function getLogoutButtonHTML($message) {
+		return "<form  method='post' >
+			<p id='" . self::$messageId . "'>$message</p>
+			<input type='submit' name='" . self::$logout . "' value='logout'/>
+			</form>";
+	}
+
+	private function generateLoginFormHTML($message) {
+		return "<form method='post' > 
 				<fieldset>
 					<legend>Login - enter Username and password</legend>
-					<p id="' . self::$messageId . '">' . $message . '</p>
-					
-					<label for="' . self::$name . '">Username :</label>
-					<input type="text" id="' . self::$name . '" name="' . self::$name . '" value="' . $user . '" />
+					<p id='".self::$messageId."'>$message</p>
+					<label for='".self::$name."'>Username :</label>
+					<input type='text' id='".self::$name."' name='".self::$name."' value='".$this->getRequestUserName()."'/>
 
-					<label for="' . self::$password . '">Password :</label>
-					<input type="password" id="' . self::$password . '" name="' . self::$password . '" />
+					<label for='".self::$password."'>Password :</label>
+					<input type='password' id='".self::$password."' name='".self::$password."'/>
 
-					<label for="' . self::$keep . '">Keep me logged in  :</label>
-					<input type="checkbox" id="' . self::$keep . '" name="' . self::$keep . '" />
+					<label for='".self::$keep."'>Keep me logged in  :</label>
+					<input type='checkbox' id='".self::$keep."' name='".self::$keep."'/>
 					
-					<input type="submit" name="' . self::$login . '" value="login" />
+					<input type='submit' name='".self::$login."' value='login'/>
 				</fieldset>
 			</form>
-		';
+		";
 	}
 
-	//Get user name
 	private function getRequestUserName() {
-		if(isset($_POST[self::$name]))
-			return $_POST[self::$name];
-	}
-	//Get Password
-	private function getRequestPassword() {
-		if(isset($_POST[self::$password]))
-			return $_POST[self::$password];
-	}
-	//Is $_POST["Login"] Set?
-	private function userWantsToLogin() {
-		if(isset($_POST[self::$login]))
-			return true;
-		else
-			return false;
-	}
-	//Is $_POST["Logout"] Set?
-	private function userWantsToLogout() {
-		if(isset($_POST[self::$logout]))
-			return true;
-		else
-			return false;
-	}
-	//Is Keep me login checked?
-	private function keepLogin(){
-		return isset($_POST[self::$keep]);
+		if (isset($_POST[self::$name]))
+			return trim($_POST[self::$name]);
+		return "";
 	}
 
-	//Is there any cookies available?
-	private function isThereAnyCookies(){
-		return isset($_COOKIE[self::$cookieName]) && isset($_COOKIE[self::$cookiePassword]);
+	private function getUserName() {
+		if (isset($_POST[self::$name]))
+			return trim($_POST[self::$name]);
+
+		if (isset($_COOKIE[self::$cookieName]))
+			return trim($_COOKIE[self::$cookieName]);
+		return "";
+	}
+
+	private function getPassword() {
+		if (isset($_POST[self::$password]))
+			return trim($_POST[self::$password]);
+		return "";
+	}
+
+	private function getTempPassword() {
+		if (isset($_COOKIE[self::$CookiePassword]))
+			return trim($_COOKIE[self::$CookiePassword]);
+		return "";
+	}
+
+	private function rememberMe() {
+		return isset($_POST[self::$keep]) || 
+			   isset($_COOKIE[self::$CookiePassword]);
 	}
 }

@@ -3,8 +3,6 @@
   * Solution for assignment 2
   * @author Daniel Toll
   */
-namespace model;
-
 class UserClient {
 	private $remoteAddr;
 	private $userAgent;

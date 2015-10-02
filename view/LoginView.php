@@ -3,8 +3,6 @@
   * Solution for assignment 2
   * @author Daniel Toll
   */
-namespace view;
-
 class LoginView {
 	/**
 	 * These names are used in $_POST
@@ -41,8 +39,8 @@ class LoginView {
 	/**
 	 * @param \model\LoginModel $model
 	 */
-	public function __construct(\model\LoginModel $model) {
-		self::$sessionSaveLocation .= \Settings::APP_SESSION_NAME;
+	public function __construct(LoginModel $model) {
+		self::$sessionSaveLocation .= Settings::APP_SESSION_NAME;
 		$this->model = $model;
 	}
 
@@ -71,14 +69,14 @@ class LoginView {
 	 * @return \model\UserCredentials
 	 */
 	public function getCredentials() {
-		return new \model\UserCredentials($this->getUserName(), 
+		return new UserCredentials($this->getUserName(),
 									$this->getPassword(),
 									$this->getTempPassword(),
 									$this->getUserClient());
 	}
 
 	public function getUserClient() {
-		return new \model\UserClient($_SERVER["REMOTE_ADDR"], $_SERVER["HTTP_USER_AGENT"]);
+		return new UserClient($_SERVER["REMOTE_ADDR"], $_SERVER["HTTP_USER_AGENT"]);
 	}
 
 	/**

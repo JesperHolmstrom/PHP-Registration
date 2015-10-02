@@ -3,8 +3,6 @@
   * Solution for assignment 2
   * @author Daniel Toll
   */
-namespace model;
-
 class TempCredentials {
 	private $expire;
 	private $tempPassword;
@@ -14,7 +12,7 @@ class TempCredentials {
 	public function __construct($userName) {
 		
 		$this->expire = time()+ self::TEMP_CREDENTIALS_MAX_TIME;
-		$this->tempPassword = sha1(\Settings::SALT . rand() . time() );
+		$this->tempPassword = sha1(Settings::SALT . rand() . time() );
 	}
 
 	public function isValid($tempPasswordGiven) {

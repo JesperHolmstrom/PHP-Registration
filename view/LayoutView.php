@@ -3,8 +3,6 @@
   * Solution for assignment 2
   * @author Daniel Toll
   */
-namespace view;
-
 class LayoutView {
   public function render($isLoggedIn, LoginView $v, DateTimeView $dtv) {
 ?>
@@ -16,6 +14,7 @@ class LayoutView {
   </head>
   <body>
     <h1>Assignment 2</h1>
+    <a href='?register'>Register a new user</a>
     <?php 
       if ($isLoggedIn) {
         echo "<h2>Logged in</h2>";

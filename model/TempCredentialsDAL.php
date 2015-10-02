@@ -3,8 +3,6 @@
   * Solution for assignment 2
   * @author Daniel Toll
   */
-namespace model;
-
 class TempCredentialsDAL {
 	/**
 	 * 
@@ -32,6 +30,6 @@ class TempCredentialsDAL {
 
 	private function getFileName($userName) {
 		//TODO: replace the addslashes with something that makes username safe for use in filesystem
-		return \Settings::DATAPATH . addslashes($userName);
+		return Settings::DATAPATH . addslashes($userName);
 	}
 }

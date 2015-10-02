@@ -3,8 +3,6 @@
   * Solution for assignment 2
   * @author Daniel Toll
   */
-namespace model;
-
 /**
  * Contains information of the user that is logged in
  */

@@ -3,8 +3,6 @@
   * Solution for assignment 2
   * @author Daniel Toll
   */
-namespace controller;
-
 require_once("model/LoginModel.php");
 require_once("view/LoginView.php");
 
@@ -13,7 +11,7 @@ class LoginController {
 	private $model;
 	private $view;
 
-	public function __construct(\model\LoginModel $model, \view\LoginView $view) {
+	public function __construct(LoginModel $model, LoginView $view) {
 		$this->model = $model;
 		$this->view =  $view;
 	}

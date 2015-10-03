@@ -4,6 +4,7 @@
   * @author Daniel Toll
   */
 require_once("model/LoginModel.php");
+require_once("model/UserDAL.php");
 require_once("view/LoginView.php");
 
 class LoginController {
@@ -37,7 +38,13 @@ class LoginController {
 					$this->view->setLoginFailed();
 				}
 			}
-			else if($this->registerView->userWantsToRegister()){
+			else if($this->registerView->userWantsToRegister() && $this->registerView->formIsValid()){
+				$userModel = $this->registerView->getUserModel();
+				if ($userModel->registerUser() == true) {
+					$this->registerView->setRegistrationSucceeded();
+				} else {
+					$this->registerView->setRegistrationFailed();
+				}
 			}
 		}
 		$this->model->renew($userClient);

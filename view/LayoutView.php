@@ -17,7 +17,7 @@ class LayoutView {
     <?php
       if($rv->userClickedOnRegister())
         echo $rv->getBackLink();
-      else
+      else if(!$isLoggedIn)
         echo $rv->getRegistrationLink();
 
       if ($isLoggedIn) {

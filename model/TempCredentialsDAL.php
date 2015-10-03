@@ -22,8 +22,6 @@ class TempCredentialsDAL {
 		return null;
 	}
 
-	
-
 	public function save(LoggedInUser $user, TempCredentials $t) {
 		file_put_contents( self::getFileName($user->getUserName()), serialize($t) );
 	}

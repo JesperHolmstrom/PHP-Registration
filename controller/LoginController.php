@@ -10,10 +10,12 @@ class LoginController {
 
 	private $model;
 	private $view;
+	private $registerView;
 
-	public function __construct(LoginModel $model, LoginView $view) {
+	public function __construct(LoginModel $model, LoginView $view, RegisterView $registerView) {
 		$this->model = $model;
 		$this->view =  $view;
+		$this->registerView = $registerView;
 	}
 
 	public function doControl() {
@@ -34,6 +36,8 @@ class LoginController {
 				} else {
 					$this->view->setLoginFailed();
 				}
+			}
+			else if($this->registerView->userWantsToRegister()){
 			}
 		}
 		$this->model->renew($userClient);

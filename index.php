@@ -20,8 +20,8 @@ session_start();
 //Dependency injection
 $m = new LoginModel();
 $v = new LoginView($m);
-$c = new LoginController($m, $v);
 $rv = new RegisterView();
+$c = new LoginController($m, $v, $rv);
 
 
 //Controller must be run first since state is changed

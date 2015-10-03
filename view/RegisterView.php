@@ -12,6 +12,11 @@ class RegisterView {
     private static $pass = "RegisterView::Password";
     private static $passRepeat = "RegisterView::PasswordRepeat";
 
+    private $registrationSucceeded = false;
+    private $registrationFailed = false;
+
+    private static $sessionSaveLocation = "\\view\\LoginView\\message";
+
     public function response() {
         return $this->doRegisterForm();
     }
@@ -27,8 +32,17 @@ class RegisterView {
                 $message .= "Password has too few characters, at least 6 characters.";
             if(!ctype_alnum($this->getUserName()))
                 $message .= "Username contains invalid characters.";
+
+            if($this->registrationFailed)
+                $message = "User exists, pick another username.";
         }
         return $this->generateRegisterForm($message);
+    }
+
+    private function redirect($message) {
+        $_SESSION[self::$sessionSaveLocation] = $message;
+        $actual_link = 'http://'.$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF'];
+        header("Location: $actual_link");
     }
 
     private function generateRegisterForm($message){
@@ -96,5 +110,14 @@ class RegisterView {
             && strlen($this->getPassword()) > 5
             && (strlen($this->getPassword()) === strlen($this->getPasswordRepeat()));
     }
+
+    public function setRegistrationSucceeded(){
+        $this->registrationSucceeded = true;
+    }
+
+    public function setRegistrationFailed(){
+        $this->registrationFailed = true;
+    }
+
 
 }

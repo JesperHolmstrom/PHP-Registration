@@ -41,7 +41,7 @@ class LoginController {
 			else if($this->registerView->userWantsToRegister() && $this->registerView->formIsValid()){
 				$userModel = $this->registerView->getUserModel();
 				if ($userModel->registerUser() == true) {
-					$this->registerView->setRegistrationSucceeded();
+					$this->view->setUserDidRegister();
 				} else {
 					$this->registerView->setRegistrationFailed();
 				}

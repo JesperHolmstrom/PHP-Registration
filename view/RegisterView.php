@@ -15,7 +15,13 @@ class RegisterView {
     private $registrationSucceeded = false;
     private $registrationFailed = false;
 
-    private static $sessionSaveLocation = "\\view\\LoginView\\message";
+    private static $sessionSaveLocation;
+    private static $userSaveLocation;
+
+    public function __construct() {
+        self::$sessionSaveLocation = Settings::MESSAGE_SESSION_NAME . Settings::APP_SESSION_NAME;
+        self::$userSaveLocation = Settings::USER_SESSION_NAME . Settings::APP_SESSION_NAME;
+    }
 
     public function response() {
         return $this->doRegisterForm();
@@ -30,19 +36,15 @@ class RegisterView {
                 $message .= "Passwords do not match.";
             if(strlen($this->getPassword()) < 6)
                 $message .= "Password has too few characters, at least 6 characters.";
-            if(!ctype_alnum($this->getUserName()))
+            if(!ctype_alnum($this->getUserName())){
                 $message .= "Username contains invalid characters.";
+                $this->removeHTMLTags();
+            }
 
             if($this->registrationFailed)
                 $message = "User exists, pick another username.";
         }
         return $this->generateRegisterForm($message);
-    }
-
-    private function redirect($message) {
-        $_SESSION[self::$sessionSaveLocation] = $message;
-        $actual_link = 'http://'.$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF'];
-        header("Location: $actual_link");
     }
 
     private function generateRegisterForm($message){
@@ -108,15 +110,28 @@ class RegisterView {
         //TODO: Not nice to have validation here and in doRegisterForm, refactor this
         return strlen($this->getUserName()) > 2
             && strlen($this->getPassword()) > 5
-            && (strlen($this->getPassword()) === strlen($this->getPasswordRepeat()));
+            && ($this->getPassword() === $this->getPasswordRepeat())
+            && ctype_alnum($this->getUserName());
     }
 
     public function setRegistrationSucceeded(){
+        $_SESSION[self::$sessionSaveLocation] = "Registered new user.";
+        $_SESSION[self::$userSaveLocation] = $this->getUserName();
+        unset($_GET[self::$registrationURL]);
         $this->registrationSucceeded = true;
+    }
+
+    public function registrationSucceeded(){
+        return $this->registrationSucceeded;
     }
 
     public function setRegistrationFailed(){
         $this->registrationFailed = true;
+    }
+
+    public function removeHTMLTags(){
+        $username = $this->getUserName();
+        $_POST[self::$user] = strip_tags($username);
     }
 
 

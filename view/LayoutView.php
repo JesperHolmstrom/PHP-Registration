@@ -29,7 +29,7 @@ class LayoutView {
     <div class="container" >
       <?php
 
-        if($rv->userClickedOnRegister())
+        if($rv->userClickedOnRegister() && $rv->registrationSucceeded() === FALSE)
           echo $rv->response();
         else
           echo $v->response();

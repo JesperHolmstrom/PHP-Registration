@@ -32,4 +32,3 @@ $c->doControl();
 $dtv = new DateTimeView();
 $lv = new LayoutView();
 $lv->render($m->isLoggedIn($v->getUserClient()), $v, $dtv, $rv);
-

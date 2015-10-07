@@ -119,6 +119,9 @@ class RegisterView {
         $_SESSION[self::$userSaveLocation] = $this->getUserName();
         unset($_GET[self::$registrationURL]);
         $this->registrationSucceeded = true;
+        $actual_link = 'http://'.$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF'];
+        header("Location: $actual_link");
+        exit;
     }
 
     public function registrationSucceeded(){

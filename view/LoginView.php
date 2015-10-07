@@ -31,7 +31,6 @@ class LoginView {
 	private $loginHasFailed = false;
 	private $loginHasSucceeded = false;
 	private $userDidLogout = false;
-	private $userDidRegister = false;
 
 	/**
 	 * @var \model\LoginModel
@@ -99,10 +98,6 @@ class LoginView {
 	 */
 	public function setLoginSucceeded() {
 		$this->loginHasSucceeded = true;	
-	}
-
-	public function setUserDidRegister(){
-		$this->userDidRegister = true;
 	}
 
 	/**

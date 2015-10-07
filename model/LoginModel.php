@@ -21,7 +21,6 @@ class LoginModel {
 	 * @var null | TempCredentials
 	 */
 	private $tempCredentials = null;
-	private $user;
 
 	private $tempDAL;
 	private $userDAL;
